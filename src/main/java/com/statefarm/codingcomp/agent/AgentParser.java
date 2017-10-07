@@ -29,35 +29,35 @@ public class AgentParser {
 
 	@Cacheable(value = "agents")
 	public Agent parseAgent(String fileName) {
-		Agent agent = new Agent(); 
+		Agent agent = new Agent();
 		File input = new File(fileName);
 		Document doc;
-		
+
 		try {
 			doc = Jsoup.parse(input, "UTF-8", "");
 			setAgentName(agent, doc);
 			setOffices(agent, doc);
-			setProducts(agent, doc); 
+			setProducts(agent, doc);
 		} catch (IOException e) {
-			System.out.println("Reading HTML failed!"); 
+			System.out.println("Reading HTML failed!");
 			e.printStackTrace();
 		}
-		
+
 		return agent;
 	}
-	
-	private void setProducts (Agent agent, Document doc) {
-		Set<Product> products = new HashSet<Product>(); 
-		
+
+	private void setProducts(Agent agent, Document doc) {
+		Set<Product> products = new HashSet<Product>();
+
 		Elements e = doc.getElementsByAttributeValue("itemprop", "description").select("li");
-		for(int i = 0; i < e.size(); i++) {
-			products.add(Product.fromValue(e.get(i).text())); 
+		for (int i = 0; i < e.size(); i++) {
+			products.add(Product.fromValue(e.get(i).text()));
 		}
-		
+
 		agent.setProducts(products);
 	}
-	
-	private void setAgentName (Agent agent, Document doc) {
+
+	private void setAgentName(Agent agent, Document doc) {
 		// there is only one name, so we use first()
 		agent.setName(doc.getElementsByAttributeValue("itemprop", "name").first().text());
 	}
@@ -68,18 +68,19 @@ public class AgentParser {
 		Elements addresses = doc.getElementsByAttributeValue("itemprop", "address");
 		for (Element addressElem : addresses) {
 			Address address = new Address();
-			
+
 			// set street address
-			String[] fullAddress = addressElem.getElementsByAttributeValueContaining("id", "locStreetContent").html().split("<br>");
+			String[] fullAddress = addressElem.getElementsByAttributeValueContaining("id", "locStreetContent").html()
+					.split("<br>");
 			address.setLine1(fullAddress[0].replace(",", "")); // strip commas out of address
 			if (fullAddress.length > 1) {
 				address.setLine2(fullAddress[1].replaceAll(",", ""));
 			}
-			
+
 			// set city
 			String city = addressElem.getElementsByAttributeValue("itemprop", "addressLocality").text();
 			address.setCity(city.substring(0, city.length() - 1)); // strip comma off of end
-			
+
 			// set state
 			address.setState(USState.fromAbbrev(addressElem.getElementsByAttributeValue("itemprop", "addressRegion").text()));
 			
@@ -103,7 +104,35 @@ public class AgentParser {
 		if (offices.size() > 1) {
 			offices.get(1).setPhoneNumber(parsePhoneNumber(doc.getElementsByAttributeValueContaining("id", "offNumber_additionalLocContent").first()));
 		}
-		
+
+		for (int i = 0; i < offices.size(); i++) {
+			Set<String> officeLanguages = new HashSet<String>();
+
+			if (i == 0) {
+				Elements languages = doc.getElementsByAttributeValueMatching("id", "language[^_]*_mainLocContent");
+				languages.remove(0);
+				for (Element l : languages) {
+					String _temp = l.text();
+					if (_temp.equals("Español")) {
+						_temp = "Spanish";
+					}
+					officeLanguages.add(_temp);
+				}
+			} else {
+				Elements languages = doc.getElementsByAttributeValueMatching("id",
+						"language[^_]*_additionalLocContent");
+				languages.remove(0);
+				for (Element l : languages) {
+					String _temp = l.text();
+					if (_temp.equals("Español")) {
+						_temp = "Spanish";
+					}
+					officeLanguages.add(_temp);
+				}
+			}
+			offices.get(i).setLanguages(officeLanguages);
+		}
+
 		agent.setOffices(offices);
 	}
 	

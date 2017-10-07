@@ -63,8 +63,9 @@ public class AgentParser {
 	}
 	
 	private void setOffices (Agent agent, Document doc) {
-		Elements addresses = doc.getElementsByAttributeValue("itemprop", "address");
 		List<Office> offices = new ArrayList<Office>();
+		
+		Elements addresses = doc.getElementsByAttributeValue("itemprop", "address");
 		for (Element addressElem : addresses) {
 			Address address = new Address();
 			
@@ -80,17 +81,43 @@ public class AgentParser {
 			address.setCity(city.substring(0, city.length() - 1)); // strip comma off of end
 			
 			// set state
-			address.setState(USState.fromValue(addressElem.getElementsByAttributeValue("itemprop", "addressRegion").text()));
+			address.setState(USState.fromAbbrev(addressElem.getElementsByAttributeValue("itemprop", "addressRegion").text()));
 			
 			// set postal code
 			String postalCode = addressElem.getElementsByAttributeValue("itemprop", "postalCode").text();
-			address.setPostalCode(postalCode.substring(0, 5));
+			address.setPostalCode(postalCode);
 			
 			Office o = new Office();
 			o.setAddress(address);
 			offices.add(o);
 		}
 		
+		offices.get(0).setOfficeHours(parseOfficeHours(doc.getElementsByAttributeValueContaining("id", "officeHoursContent_mainLocContent")));
+		
+		if (offices.size() > 1) {
+			offices.get(1).setOfficeHours(parseOfficeHours(doc.getElementsByAttributeValueContaining("id", "officeHoursContent_additionalLocContent")));
+		}
+		
+		offices.get(0).setPhoneNumber(parsePhoneNumber(doc.getElementsByAttributeValueContaining("id", "offNumber_mainLocContent").first()));
+		
+		if (offices.size() > 1) {
+			offices.get(1).setPhoneNumber(parsePhoneNumber(doc.getElementsByAttributeValueContaining("id", "offNumber_additionalLocContent").first()));
+		}
+		
 		agent.setOffices(offices);
+	}
+	
+	private List<String> parseOfficeHours (Elements officeHoursElems) {
+		List<String> firstOfficeHours = new ArrayList<String>();
+		for (Element officeHour : officeHoursElems) {
+			firstOfficeHours.add(officeHour.text());
+		}
+		
+		return firstOfficeHours;
+	}
+	
+	private String parsePhoneNumber (Element phoneElem) {
+		String numberText = phoneElem.getElementsByTag("span").first().text();
+		return numberText.substring(numberText.length() - 12, numberText.length());
 	}
 }

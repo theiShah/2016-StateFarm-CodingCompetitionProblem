@@ -77,4 +77,14 @@ public enum USState {
 		}
 		return null;
 	}
+	
+	public static USState fromAbbrev (String abbrev) {
+		for (USState s : values()) {
+			if (s.toString().equals(abbrev)) {
+				return s;
+			}
+		}
+		
+		return null;
+	}
 }

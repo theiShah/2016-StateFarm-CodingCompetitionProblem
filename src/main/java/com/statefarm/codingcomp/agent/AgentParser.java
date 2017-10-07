@@ -20,15 +20,22 @@ public class AgentParser {
 	@Cacheable(value = "agents")
 	public Agent parseAgent(String fileName) {
 		Agent agent = new Agent(); 
-		File input = new File(fileName); 
+		File input = new File(fileName);
+		Document doc;
 		
 		try {
-			Document doc = Jsoup.parse(input, "UTF-8", "");
+			doc = Jsoup.parse(input, "UTF-8", "");
+			setAgentName(agent, doc);
 		} catch (IOException e) {
 			System.out.println("Reading HTML failed!"); 
 			e.printStackTrace();
-		} 
+		}
 		
-		return null;
+		return agent;
+	}
+	
+	private void setAgentName (Agent agent, Document doc) {
+		// there is only one name, so we use first()
+		agent.setName(doc.getElementsByAttributeValue("itemprop", "name").first().text());
 	}
 }

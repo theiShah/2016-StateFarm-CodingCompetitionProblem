@@ -26,25 +26,24 @@ public class AgentLocator {
 	private SFFileReader sfFileReader;
 
 	/**
-	 * Find agents where the URL of their name contains the firstName and
-	 * lastName For instance, Tom Newman would search for "Tom-" and "-Newman"	
-	 * in the URL.
+	 * Find agents where the URL of their name contains the firstName and lastName
+	 * For instance, Tom Newman would search for "Tom-" and "-Newman" in the URL.
 	 * 
 	 * @param firstName
 	 * @param lastName
 	 * @return
 	 */
 	public List<Agent> getAgentsByName(String firstName, String lastName) {
-		List <Agent> agents = new ArrayList<Agent>(); 
-		List <String> agentFiles = sfFileReader.findAgentFiles(); 
-		
-		for(String str : agentFiles) {
-			if( (str.contains(firstName + "-")) && (str.contains("-" + lastName))) {
-				agents.add(agentParser.parseAgent(str)); 
+		List<Agent> agents = new ArrayList<Agent>();
+		List<String> agentFiles = sfFileReader.findAgentFiles();
+
+		for (String str : agentFiles) {
+			if ((str.contains(firstName + "-")) && (str.contains("-" + lastName))) {
+				agents.add(agentParser.parseAgent(str));
 			}
 		}
-		
-		return agents; 
+
+		return agents;
 	}
 
 	/**
@@ -54,70 +53,137 @@ public class AgentLocator {
 	 * @return
 	 */
 	public List<Agent> getAgentsByState(USState state) {
-		List <Agent> agents = getAllAgents(); 
-		List <Agent> agentsByState = new ArrayList<Agent>(); 
-		
-		for(Agent a : agents) {
-			for(Office o : a.getOffices()) {
-				if(o.getAddress().getState() == state) {
-					agentsByState.add(a); 
+		List<Agent> agents = getAllAgents();
+		List<Agent> agentsByState = new ArrayList<Agent>();
+
+		for (Agent a : agents) {
+			for (Office o : a.getOffices()) {
+				if (o.getAddress().getState() == state) {
+					agentsByState.add(a);
 				}
 			}
 		}
-		
-		return agentsByState; 
+
+		return agentsByState;
 	}
 
 	public List<Agent> getAllAgents() {
-		List<Agent> agents = new ArrayList<Agent>(); 
-		List<String> agentFiles = sfFileReader.findAgentFiles(); 
-		
-		for(String str : agentFiles) {
-			agents.add(agentParser.parseAgent(str)); 
+		List<Agent> agents = new ArrayList<Agent>();
+		List<String> agentFiles = sfFileReader.findAgentFiles();
+
+		for (String str : agentFiles) {
+			agents.add(agentParser.parseAgent(str));
 		}
-		
-		return agents; 
+
+		return agents;
 	}
 
 	public Map<String, List<Agent>> getAllAgentsByUniqueFullName() {
-		List <Agent> agents = getAllAgents(); 
-		Map <String, List<Agent>> map = new HashMap <String, List<Agent>> (); 
-		
-		for(Agent a : agents) {
-			System.out.println(a.getName());
-			if(map.containsKey(a.getName())) {
-				List <Agent> _temp = map.get(a.getName()); 
-				_temp.add(a); 
-				map.put(a.getName(), _temp); 
+		List<Agent> agents = getAllAgents();
+		Map<String, List<Agent>> map = new HashMap<String, List<Agent>>();
+
+		for (Agent a : agents) {
+			if (map.containsKey(a.getName())) {
+				List<Agent> _temp = map.get(a.getName());
+				_temp.add(a);
+				map.put(a.getName(), _temp);
 			} else {
-				List <Agent> _temp = new ArrayList <Agent> (); 
-				_temp.add(a); 
-				map.put(a.getName(), _temp); 
+				List<Agent> _temp = new ArrayList<Agent>();
+				_temp.add(a);
+				map.put(a.getName(), _temp);
 			}
 		}
-		
-		return map; 
+
+		return map;
 	}
 
 	public String mostPopularFirstName() {
-		List <Agent> agents = getAllAgents(); 
-		Map <String, Integer> map = new HashMap<String, Integer>(); 
-		String popularName = ""; 
-		
-		for(Agent a : agents) { 
-			String firstname = a.getName().split(" ")[0]; 
+		List<Agent> agents = getAllAgents();
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		String popularName = "";
+
+		for (Agent a : agents) {
+			String firstname = a.getName().split(" ")[0];
+			if (map.containsKey(firstname)) {
+				Integer i = map.get(firstname);
+				i++;
+				map.put(firstname, i);
+			} else {
+				map.put(firstname, 1);
+			}
 		}
-		
-		return popularName; 
+
+		int max = 0;
+
+		for (String str : map.keySet()) {
+			if (max < map.get(str)) {
+				max = map.get(str);
+				popularName = str;
+			}
+		}
+
+		return popularName;
 	}
 
 	public String mostPopularLastName() {
-		return null;
+		List<Agent> agents = getAllAgents();
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		String popularName = "";
 
+		for (Agent a : agents) {
+			String lastname = a.getName().split(" ")[1];
+
+			if (map.containsKey(lastname)) {
+				Integer i = map.get(lastname);
+				i++;
+				map.put(lastname, i);
+			} else {
+				map.put(lastname, 1);
+			}
+		}
+
+		int max = 0;
+
+		for (String str : map.keySet()) {
+			if (max < map.get(str)) {
+				max = map.get(str);
+				popularName = str;
+			}
+		}
+
+		return popularName;
 	}
 
 	public String mostPopularSuffix() {
-		return null;
+		List<Agent> agents = getAllAgents();
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		String popularName = "";
 
+		for (Agent a : agents) {
+
+			String[] names = a.getName().split(" ");
+			if (names.length > 2) {
+				String suffix = names[2];
+
+				if (map.containsKey(suffix)) {
+					Integer i = map.get(suffix);
+					i++;
+					map.put(suffix, i);
+				} else {
+					map.put(suffix, 1);
+				}
+			}
+		}
+
+		int max = 0;
+
+		for (String str : map.keySet()) {
+			if (max < map.get(str)) {
+				max = map.get(str);
+				popularName = str;
+			}
+		}
+
+		return popularName;
 	}
 }

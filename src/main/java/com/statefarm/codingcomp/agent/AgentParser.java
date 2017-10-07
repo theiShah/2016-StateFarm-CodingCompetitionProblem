@@ -70,9 +70,9 @@ public class AgentParser {
 			
 			// set street address
 			String[] fullAddress = addressElem.getElementsByAttributeValueContaining("id", "locStreetContent").html().split("<br>");
-			address.setLine1(fullAddress[0]);
+			address.setLine1(fullAddress[0].replace(",", "")); // strip commas out of address
 			if (fullAddress.length > 1) {
-				address.setLine2(fullAddress[1]);
+				address.setLine2(fullAddress[1].replaceAll(",", ""));
 			}
 			
 			// set city
@@ -90,5 +90,7 @@ public class AgentParser {
 			o.setAddress(address);
 			offices.add(o);
 		}
+		
+		agent.setOffices(offices);
 	}
 }

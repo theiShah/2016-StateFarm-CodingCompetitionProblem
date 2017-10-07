@@ -7,6 +7,8 @@ import java.util.Set;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
@@ -29,6 +31,7 @@ public class AgentParser {
 		try {
 			doc = Jsoup.parse(input, "UTF-8", "");
 			setAgentName(agent, doc);
+			agent.setProducts(getProducts(doc)); 
 		} catch (IOException e) {
 			System.out.println("Reading HTML failed!"); 
 			e.printStackTrace();
@@ -40,6 +43,10 @@ public class AgentParser {
 	private Set<Product> getProducts (Document doc) {
 		Set<Product> products = new HashSet<Product>(); 
 		
+		Elements e = doc.getElementsByAttributeValue("itemprop", "description").select("li");
+		for(int i = 0; i < e.size(); i++) {
+			products.add(Product.fromValue(e.get(i).text())); 
+		}
 		return products; 
 	}
 	
